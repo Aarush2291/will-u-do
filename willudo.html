@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Will U Do - Random Choice Game</title>
+    <link href="https://fonts.googleapis.com/css2?family=Creepster&family=Nosifer&family=Eater&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #000;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxkZWZzPjxmaWx0ZXIgaWQ9Im5vaXNlIj48ZmVUdXJidWxlbmNlIGJhc2VGcmVxdWVuY3k9IjAuNjUiIG51bU9jdGF2ZXM9IjMiIHN0aXRjaFRpbGVzPSJzdGl0Y2giLz48L2ZpbHRlcj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsdGVyPSJ1cmwoI25vaXNlKSIgb3BhY2l0eT0iMC4xIi8+PC9zdmc+');
+            opacity: 0.3;
+            z-index: 0;
+        }
+
+        .bg-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(20, 20, 40, 0.95) 0%, rgba(10, 10, 20, 0.95) 100%);
+            z-index: 1;
+        }
+
+        .container {
+            text-align: center;
+            width: 100%;
+            max-width: 600px;
+            padding: 20px;
+            position: relative;
+            z-index: 10;
+        }
+
+        h1 {
+            font-family: 'Creepster', cursive;
+            font-size: 6rem;
+            color: #ff0000;
+            text-shadow: 0 0 30px rgba(255, 0, 0, 0.8),
+                         0 0 60px rgba(255, 0, 0, 0.6),
+                         0 0 90px rgba(255, 0, 0, 0.4),
+                         5px 5px 0px rgba(0, 0, 0, 0.8);
+            margin-bottom: 60px;
+            animation: flicker 3s ease-in-out infinite;
+            letter-spacing: 8px;
+            transform: rotate(-2deg);
+        }
+
+        @keyframes flicker {
+            0%, 100% {
+                text-shadow: 0 0 30px rgba(255, 0, 0, 0.8),
+                           0 0 60px rgba(255, 0, 0, 0.6),
+                           0 0 90px rgba(255, 0, 0, 0.4),
+                           5px 5px 0px rgba(0, 0, 0, 0.8);
+            }
+            25% {
+                text-shadow: 0 0 40px rgba(255, 0, 0, 1),
+                           0 0 80px rgba(255, 0, 0, 0.8),
+                           0 0 120px rgba(255, 0, 0, 0.6),
+                           5px 5px 0px rgba(0, 0, 0, 0.8);
+            }
+            50% {
+                text-shadow: 0 0 20px rgba(255, 0, 0, 0.6),
+                           0 0 40px rgba(255, 0, 0, 0.4),
+                           0 0 60px rgba(255, 0, 0, 0.2),
+                           5px 5px 0px rgba(0, 0, 0, 0.8);
+            }
+            75% {
+                text-shadow: 0 0 50px rgba(255, 0, 0, 1),
+                           0 0 100px rgba(255, 0, 0, 0.8),
+                           0 0 150px rgba(255, 0, 0, 0.6),
+                           5px 5px 0px rgba(0, 0, 0, 0.8);
+            }
+        }
+
+        .button-container {
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
+            align-items: center;
+        }
+
+        .game-button {
+            position: relative;
+            padding: 25px 60px;
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #fff;
+            background: linear-gradient(145deg, #1a1a1a, #0d0d0d);
+            border: none;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            min-width: 320px;
+            overflow: hidden;
+            clip-path: polygon(10% 0%, 100% 0%, 90% 100%, 0% 100%);
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.3),
+                        inset 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .game-button::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, 
+                #ff0000, #ff4500, #ff0000, #8b0000, 
+                #ff0000, #ff4500, #ff0000);
+            z-index: -1;
+            animation: borderGlow 4s linear infinite;
+            background-size: 300%;
+            clip-path: polygon(10% 0%, 100% 0%, 90% 100%, 0% 100%);
+        }
+
+        @keyframes borderGlow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .game-button:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 0 40px rgba(255, 0, 0, 0.6),
+                        inset 0 0 30px rgba(255, 0, 0, 0.2);
+            color: #ff0000;
+        }
+
+        .game-button:active {
+            transform: translateY(-2px) scale(1.02);
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: linear-gradient(145deg, #1a1a1a, #0d0d0d);
+            padding: 40px;
+            border-radius: 20px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 0 50px rgba(255, 0, 0, 0.5),
+                        inset 0 0 30px rgba(0, 0, 0, 0.8);
+            border: 2px solid #ff0000;
+        }
+
+        .modal-content h2 {
+            color: #ff0000;
+            margin-bottom: 30px;
+            text-shadow: 0 0 10px rgba(255, 0, 0, 0.8);
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #fff;
+            font-weight: bold;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ff0000;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: #0d0d0d;
+            color: #fff;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .modal-button {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #ff0000;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .save-btn {
+            background: #ff0000;
+            color: white;
+        }
+
+        .save-btn:hover {
+            background: #cc0000;
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.6);
+        }
+
+        .cancel-btn {
+            background: transparent;
+            color: #fff;
+        }
+
+        .cancel-btn:hover {
+            background: rgba(255, 0, 0, 0.2);
+        }
+
+        /* Game Screen */
+        .game-screen {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1000;
+        }
+
+        .game-screen.active {
+            display: flex;
+        }
+
+        .choice-half {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.5s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .choice-half::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: inherit;
+            transition: all 0.5s ease;
+            z-index: 0;
+        }
+
+        .choice-half:hover {
+            transform: translateY(-20px);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.8);
+        }
+
+        .choice-half:hover::before {
+            filter: brightness(1.3);
+        }
+
+        .choice-half.red {
+            background: linear-gradient(135deg, #8B0000 0%, #4d0000 100%);
+        }
+
+        .choice-half.blue {
+            background: linear-gradient(135deg, #000080 0%, #00004d 100%);
+        }
+
+        .choice-text {
+            color: white;
+            font-size: 2.5rem;
+            font-weight: bold;
+            text-align: center;
+            padding: 40px;
+            z-index: 1;
+            text-shadow: 3px 3px 15px rgba(0, 0, 0, 0.8);
+            max-width: 80%;
+        }
+
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            padding: 10px 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            border: 2px solid #ff0000;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 1001;
+            backdrop-filter: blur(10px);
+        }
+
+        .back-button:hover {
+            background: rgba(255, 0, 0, 0.3);
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
+        }
+
+        .stats-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            border: 2px solid #ff0000;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 1001;
+            backdrop-filter: blur(10px);
+        }
+
+        .stats-button:hover {
+            background: rgba(255, 0, 0, 0.3);
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
+        }
+
+        .no-choices {
+            color: #ff0000;
+            font-size: 1.5rem;
+            margin-top: 50px;
+            text-shadow: 0 0 10px rgba(255, 0, 0, 0.8);
+        }
+
+        .copyright {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.85rem;
+            text-align: right;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
+            z-index: 100;
+        }
+
+        .copyright-line {
+            margin-bottom: 3px;
+            font-weight: 300;
+        }
+
+        .creator-name {
+            font-weight: bold;
+            letter-spacing: 1px;
+            color: #ff0000;
+        }
+
+        .freepik-credit {
+            margin-top: 3px;
+            font-size: 0.75rem;
+            opacity: 0.5;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 3.5rem;
+            }
+
+            .choice-text {
+                font-size: 1.8rem;
+                padding: 20px;
+            }
+
+            .game-button {
+                min-width: 280px;
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-overlay"></div>
+    
+    <!-- Copyright Notice -->
+    <div class="copyright">
+        <div class="copyright-line">© 2024 Will U Do. All rights reserved.</div>
+        <div class="creator-name">Made by Aarush Verma</div>
+        <div class="freepik-credit">Background inspired by Freepik.com</div>
+    </div>
+
+    <div class="container" id="mainScreen">
+        <h1>WILL U DO</h1>
+        <div class="button-container">
+            <button class="game-button" onclick="openAddModal()">Add New Choice</button>
+            <button class="game-button" onclick="startGame()">Play</button>
+        </div>
+    </div>
+
+    <!-- Add Choice Modal -->
+    <div class="modal" id="addModal">
+        <div class="modal-content">
+            <h2>Add New Choice Pair</h2>
+            <div class="input-group">
+                <label for="choice1">Choice 1:</label>
+                <input type="text" id="choice1" placeholder="e.g., Will you eat cake?">
+            </div>
+            <div class="input-group">
+                <label for="choice2">Choice 2:</label>
+                <input type="text" id="choice2" placeholder="e.g., Will you eat ice cream?">
+            </div>
+            <div class="modal-buttons">
+                <button class="modal-button cancel-btn" onclick="closeAddModal()">Cancel</button>
+                <button class="modal-button save-btn" onclick="saveChoice()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Screen -->
+    <div class="game-screen" id="gameScreen">
+        <button class="back-button" onclick="endGame()">← Back</button>
+        <button class="stats-button" id="progressText">0 / 0</button>
+        <div class="choice-half blue" id="leftChoice" onclick="makeChoice('left')">
+            <div class="choice-text" id="leftText"></div>
+        </div>
+        <div class="choice-half red" id="rightChoice" onclick="makeChoice('right')">
+            <div class="choice-text" id="rightText"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentPairIndex=0;let gamePairs=[];function loadChoices(){try{const data=localStorage.getItem('willude-choices');return data?JSON.parse(data):[]}catch(error){return[]}}function saveChoices(choices){try{localStorage.setItem('willude-choices',JSON.stringify(choices))}catch(error){console.error('Failed to save choices:',error)}}function openAddModal(){document.getElementById('addModal').classList.add('active');document.getElementById('choice1').value='';document.getElementById('choice2').value=''}function closeAddModal(){document.getElementById('addModal').classList.remove('active')}function saveChoice(){const choice1=document.getElementById('choice1').value.trim();const choice2=document.getElementById('choice2').value.trim();if(!choice1||!choice2){alert('Please fill in both choices!');return}const choices=loadChoices();choices.push({choice1,choice2});saveChoices(choices);closeAddModal();alert('Choice pair saved successfully!')}function startGame(){const choices=loadChoices();if(choices.length===0){document.querySelector('.container').innerHTML+='<div class="no-choices">No choices available! Add some choices first.</div>';setTimeout(()=>{location.reload()},2000);return}gamePairs=shuffleArray([...choices]);currentPairIndex=0;document.getElementById('mainScreen').style.display='none';document.getElementById('gameScreen').classList.add('active');showNextPair()}function showNextPair(){if(currentPairIndex>=gamePairs.length){endGame();alert('Game Over! You\'ve gone through all choices.');return}const pair=gamePairs[currentPairIndex];document.getElementById('leftText').textContent=pair.choice1;document.getElementById('rightText').textContent=pair.choice2;document.getElementById('progressText').textContent=`${currentPairIndex+1} / ${gamePairs.length}`}function makeChoice(side){currentPairIndex++;const choiceHalf=side==='left'?document.getElementById('leftChoice'):document.getElementById('rightChoice');choiceHalf.style.transform='scale(1.1)';setTimeout(()=>{choiceHalf.style.transform='scale(1)';showNextPair()},300)}function endGame(){document.getElementById('gameScreen').classList.remove('active');document.getElementById('mainScreen').style.display='flex';location.reload()}function shuffleArray(array){for(let i=array.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[array[i],array[j]]=[array[j],array[i]]}return array}window.onclick=function(event){if(event.target.classList.contains('modal')){event.target.classList.remove('active')}}
+    </script>
+</body>
+</html>
