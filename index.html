@@ -3,8 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Will U Do - Random Choice Game with Database</title>
+    <title>Will U Do - Multi-Device Shared Database</title>
     <link href="https://fonts.googleapis.com/css2?family=Creepster&family=Nosifer&family=Eater&display=swap" rel="stylesheet">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-database.js"></script>
     <style>
         * {
             margin: 0;
@@ -150,6 +153,13 @@
 
         .game-button:active {
             transform: translateY(-2px) scale(1.02);
+        }
+
+        .status-text {
+            color: #00ff00;
+            font-size: 0.9rem;
+            margin-top: 20px;
+            text-shadow: 0 0 10px rgba(0, 255, 0, 0.8);
         }
 
         /* Modal Styles */
@@ -365,6 +375,16 @@
             margin-top: 50px;
             text-shadow: 0 0 10px rgba(255, 0, 0, 0.8);
         }
+           const firebaseConfig = {
+  apiKey: "AIzaSyAVsdpYW2SsCMpelklx9WEeD-Wk5-KNL64",
+  authDomain: "willude.firebaseapp.com",
+  databaseURL: "https://willude-default-rtdb.firebaseio.com",
+  projectId: "willude",
+  storageBucket: "willude.firebasestorage.app",
+  messagingSenderId: "687502037185",
+  appId: "1:687502037185:web:4014f5f3a6fb9d16ec8440",
+  measurementId: "G-QVZL5WV4JE"
+};
 
         .copyright {
             position: fixed;
@@ -431,6 +451,7 @@
         <div class="button-container">
             <button class="game-button" onclick="openAddModal()">Add New Choice</button>
             <button class="game-button" onclick="startGame()">Play</button>
+            <div class="status-text" id="statusText">Connecting to database...</div>
         </div>
     </div>
 
@@ -453,8 +474,6 @@
         </div>
     </div>
 
-
-
     <!-- Game Screen -->
     <div class="game-screen" id="gameScreen">
         <button class="back-button" onclick="endGame()">← Back</button>
@@ -468,81 +487,55 @@
     </div>
 
     <script>
-        // IndexedDB Setup
-        let db;
-        const DB_NAME = 'WillUDoDatabase';
-        const STORE_NAME = 'choices';
+        // Firebase Configuration - UPDATE THIS WITH YOUR FIREBASE CONFIG
+        const firebaseConfig = {
+            apiKey: "AIzaSyDc_5K5D5vR3x3z3z3z3z3z3z3z3z3z3z3z",
+            authDomain: "willude-game.firebaseapp.com",
+            databaseURL: "https://willude-game-default-rtdb.firebaseio.com",
+            projectId: "willude-game",
+            storageBucket: "willude-game.appspot.com",
+            messagingSenderId: "123456789012",
+            appId: "1:123456789012:web:abcdef1234567890"
+        };
 
-        // Initialize IndexedDB
-        function initDB() {
-            return new Promise((resolve, reject) => {
-                const request = indexedDB.open(DB_NAME, 1);
-                
-                request.onerror = () => reject(request.error);
-                request.onsuccess = () => {
-                    db = request.result;
-                    resolve(db);
-                };
-                
-                request.onupgradeneeded = (event) => {
-                    const objectStore = event.target.result.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
-                    objectStore.createIndex('createdAt', 'createdAt', { unique: false });
-                };
-            });
-        }
-
-        // Load all choices from database
-        async function loadChoices() {
-            try {
-                return new Promise((resolve, reject) => {
-                    const transaction = db.transaction([STORE_NAME], 'readonly');
-                    const objectStore = transaction.objectStore(STORE_NAME);
-                    const request = objectStore.getAll();
-                    
-                    request.onerror = () => reject(request.error);
-                    request.onsuccess = () => resolve(request.result);
-                });
-            } catch (error) {
-                console.error('Error loading choices:', error);
-                return [];
-            }
-        }
-
-        // Add new choice to database
-        async function addChoice(choice1, choice2) {
-            return new Promise((resolve, reject) => {
-                const transaction = db.transaction([STORE_NAME], 'readwrite');
-                const objectStore = transaction.objectStore(STORE_NAME);
-                const request = objectStore.add({
-                    choice1,
-                    choice2,
-                    createdAt: new Date().toISOString()
-                });
-                
-                request.onerror = () => reject(request.error);
-                request.onsuccess = () => resolve(request.result);
-            });
-        }
-
-        // Delete choice from database
-        async function deleteChoice(id) {
-            return new Promise((resolve, reject) => {
-                const transaction = db.transaction([STORE_NAME], 'readwrite');
-                const objectStore = transaction.objectStore(STORE_NAME);
-                const request = objectStore.delete(id);
-                
-                request.onerror = () => reject(request.error);
-                request.onsuccess = () => resolve(request.result);
-            });
-        }
+        // Initialize Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const database = firebase.getDatabase(app);
+        const choicesRef = firebase.database().ref('choices');
 
         let currentPairIndex = 0;
         let gamePairs = [];
+        let allChoices = [];
 
-        async function openAddModal() {
+        // Listen for real-time updates
+        choicesRef.on('value', (snapshot) => {
+            allChoices = [];
+            snapshot.forEach((childSnapshot) => {
+                allChoices.push({
+                    id: childSnapshot.key,
+                    choice1: childSnapshot.val().choice1,
+                    choice2: childSnapshot.val().choice2
+                });
+            });
+            updateStatus();
+        });
+
+        function updateStatus() {
+            const statusText = document.getElementById('statusText');
+            if (allChoices.length === 0) {
+                statusText.textContent = '🔴 No choices yet. Add some to get started!';
+                statusText.style.color = '#ff0000';
+            } else {
+                statusText.textContent = `✅ Connected | ${allChoices.length} choices available`;
+                statusText.style.color = '#00ff00';
+            }
+        }
+
+        function openAddModal() {
             document.getElementById('addModal').classList.add('active');
             document.getElementById('choice1').value = '';
             document.getElementById('choice2').value = '';
+            document.getElementById('choice1').focus();
         }
 
         function closeAddModal() {
@@ -559,23 +552,27 @@
             }
             
             try {
-                await addChoice(choice1, choice2);
+                const newChoiceRef = choicesRef.push();
+                await newChoiceRef.set({
+                    choice1: choice1,
+                    choice2: choice2,
+                    createdAt: new Date().toISOString()
+                });
+                
                 closeAddModal();
-                alert('Choice pair saved to database!');
+                alert('✅ Choice added! All devices will see it now!');
             } catch (error) {
-                alert('Error saving choice: ' + error.message);
+                alert('❌ Error saving choice: ' + error.message);
             }
         }
 
         async function startGame() {
-            const choices = await loadChoices();
-            
-            if (choices.length === 0) {
-                alert('No choices available! Add some choices first.');
+            if (allChoices.length === 0) {
+                alert('⚠️ No choices available! Add some choices first.');
                 return;
             }
             
-            gamePairs = shuffleArray([...choices]);
+            gamePairs = shuffleArray([...allChoices]);
             currentPairIndex = 0;
             document.getElementById('mainScreen').style.display = 'none';
             document.getElementById('gameScreen').classList.add('active');
@@ -585,7 +582,7 @@
         function showNextPair() {
             if (currentPairIndex >= gamePairs.length) {
                 endGame();
-                alert('Game Over! You\'ve gone through all choices.');
+                alert('🎮 Game Over! You\'ve gone through all choices.');
                 return;
             }
             
@@ -622,20 +619,13 @@
         }
 
         window.onclick = function(event) {
-            if (event.target.classList.contains('modal')) {
-                event.target.classList.remove('active');
+            if (event.target.id === 'addModal') {
+                closeAddModal();
             }
         }
 
-        // Initialize database on page load
-        window.addEventListener('DOMContentLoaded', async () => {
-            try {
-                await initDB();
-            } catch (error) {
-                console.error('Failed to initialize database:', error);
-                alert('Database initialization failed. Using localStorage fallback.');
-            }
-        });
+        // Initialize status
+        updateStatus();
     </script>
 </body>
 </html>
